@@ -77,9 +77,9 @@ contract AchievementNFT is ERC721Pausable, ERC721URIStorage, AccessControl {
       if(s_earnedAchievements[to][achievementKey]){
          revert AchievementNFT__AchievementAlreadyMinted(to, achievementKey);
       }
-    uint256 tokenId=s_nextTokenId++;
-    s_tokenIdToAchievementKey[tokenId]=achievementKey;
+    s_tokenIdToAchievementKey[s_nextTokenId]=achievementKey;
     s_earnedAchievements[to][achievementKey] = true;
+    uint256 tokenId=s_nextTokenId++;
     _safeMint(to, tokenId, "");
     _setTokenURI(tokenId, metadataURI);
     emit AchievementMinted(
@@ -99,8 +99,6 @@ contract AchievementNFT is ERC721Pausable, ERC721URIStorage, AccessControl {
   function unpause() external onlyRole(DEFAULT_ADMIN_ROLE) whenPaused {
     _unpause();
   }
-
-
 
   function hasAchievement(
     address owner,
