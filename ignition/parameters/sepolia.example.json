@@ -1,0 +1,7 @@
+{
+  "AchievementNFTModule": {
+    "to": "0x0000000000000000000000000000000000000000",
+    "achievementKey": "0x85d616a2a7c31ac80e7e2808040b045312aaafba1ef8232954d4e71b71a011b2",
+    "metadataURI": "ipfs://YOUR_CID_HERE"
+  }
+}

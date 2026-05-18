@@ -6,6 +6,7 @@ import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ERC721Pausable} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol";
 import {ERC721URIStorage} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 contract AchievementNFT is ERC721Pausable, ERC721URIStorage, AccessControl {
   // ----- LAYER: constants -----
@@ -30,9 +31,21 @@ contract AchievementNFT is ERC721Pausable, ERC721URIStorage, AccessControl {
     address owner,
     bytes32 achievementKey
   );
-  error AchievementNFT__SoulboundTokenCannotBeTransferedOrBurned(
+  error AchievementNFT__SoulboundTokenCannotBeTransferredOrBurned(
     uint256 tokenId
   );
+  error AchievementNFT__InvalidTokenId(
+    uint256 tokenId
+  );
+  error AchievementNFT__SoulboundTokenCannotBeApproved(
+    address to,
+    uint256 tokenId
+  );
+  error AchievementNFT__SoulboundTokenCannotBeApprovalForAll(
+    address operator,
+    bool approved
+  );
+  error AchievementNFT__InvalidMetadataURI();
 
   // ----- LAYER: modifiers -----
   // (none; OZ: onlyRole, onlyOwner)
@@ -54,7 +67,7 @@ contract AchievementNFT is ERC721Pausable, ERC721URIStorage, AccessControl {
   returns (address) {
     address from = _ownerOf(tokenId);
     if(from != address(0) ){
-      revert AchievementNFT__SoulboundTokenCannotBeTransferedOrBurned(tokenId);
+      revert AchievementNFT__SoulboundTokenCannotBeTransferredOrBurned(tokenId);
     }
     return super._update(to, tokenId, auth);
   }
@@ -76,6 +89,9 @@ contract AchievementNFT is ERC721Pausable, ERC721URIStorage, AccessControl {
     {
       if(s_earnedAchievements[to][achievementKey]){
          revert AchievementNFT__AchievementAlreadyMinted(to, achievementKey);
+      }
+      if(bytes(metadataURI).length == 0){
+        revert AchievementNFT__InvalidMetadataURI();
       }
     s_tokenIdToAchievementKey[s_nextTokenId]=achievementKey;
     s_earnedAchievements[to][achievementKey] = true;
@@ -116,6 +132,9 @@ contract AchievementNFT is ERC721Pausable, ERC721URIStorage, AccessControl {
   external 
   view 
   returns (bytes32) {
+    if(tokenId >= s_nextTokenId){
+      revert AchievementNFT__InvalidTokenId(tokenId);
+    }
     return s_tokenIdToAchievementKey[tokenId];
   }
 
@@ -149,6 +168,23 @@ contract AchievementNFT is ERC721Pausable, ERC721URIStorage, AccessControl {
   override
   onlyRole(DEFAULT_ADMIN_ROLE) {
     _revokeRole(role, account);
-  } 
+  }
+  function approve(address to, uint256 tokenId) public pure override(ERC721,IERC721){
+        revert AchievementNFT__SoulboundTokenCannotBeApproved(to,tokenId);
+  }
+  function setApprovalForAll(address operator, bool approved) public pure override(ERC721,IERC721) {
+        revert AchievementNFT__SoulboundTokenCannotBeApprovalForAll(operator, approved);
+    }
+  function transferFrom(address /* from */, address /* to */, uint256 tokenId) public pure override(ERC721,IERC721) {
+    revert AchievementNFT__SoulboundTokenCannotBeTransferredOrBurned(tokenId);
+    }
+    function safeTransferFrom(
+      address /* from */,
+      address /* to */, 
+      uint256 tokenId, 
+      bytes memory /* data */
+      ) public pure override(ERC721,IERC721) {
+        revert AchievementNFT__SoulboundTokenCannotBeTransferredOrBurned(tokenId);
+    }
 
 }
